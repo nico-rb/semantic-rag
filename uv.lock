@@ -1793,7 +1793,7 @@ wheels = [
 [[package]]
 name = "semantic-rag"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "bm25s" },
     { name = "cohere" },
