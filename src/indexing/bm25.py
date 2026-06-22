@@ -1,6 +1,10 @@
 """
 Build and persist the BM25 index over the FiQA corpus.
 
+Every document is tokenized (lowercased, punctuation stripped, English
+stopwords removed) and indexed by bm25s. The index plus the aligned list
+of document ids is written to disk so the corpus is tokenized only once.
+
 This is the offline build step. The resulting index is used
 by the BM25 retriever at query time.
 """

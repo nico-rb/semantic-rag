@@ -1,9 +1,9 @@
 """
 Build and persist the dense embedding matrix over the FiQA corpus.
 
-Every document is embedded once with text-embedding-3-small and the
-resulting (N, 1536) matrix is cached as a single .npy file, loaded from
-disk whenever it already exists so nothing is ever embedded twice.
+Every document is embedded once and the resulting (N, 1536) matrix is 
+cached as a single .npy file, loaded from disk whenever it already 
+exists so nothing is ever embedded twice.
 
 This is the offline build step. The resulting matrix is used
 by the dense retriever at query time.
@@ -21,7 +21,7 @@ from tqdm import tqdm
 load_dotenv()
 
 
-ROOT = Path(__file__).parents[1]
+ROOT = Path(__file__).parents[2]
 DATA_DIR = ROOT / "data" / "0.raw_fiqa"
 DENSE_DIR = ROOT / "data" / "indexes" / "dense"
 
@@ -51,8 +51,8 @@ def build_dense_index(documents: list[str]) -> np.ndarray:
     return np.vstack(chunks)
 
 
-# Load the corpus
 corpus = pd.read_parquet(DATA_DIR / "corpus.parquet")
+
 doc_ids = corpus["_id"].tolist()
 # OpenAI rejects empty strings in the embeddings endpoint. ~38 FiQA docs have
 # blank text; we swap in a placeholder so the row order stays aligned with the
@@ -65,10 +65,13 @@ DENSE_DIR.mkdir(parents=True, exist_ok=True)
 EMBEDDINGS_PATH = DENSE_DIR / "embeddings.npy"
 
 if EMBEDDINGS_PATH.exists():
-    print(f"Loading cached embeddings from {EMBEDDINGS_PATH}")
+    print(f"Loading cached embeddings from {EMBEDDINGS_PATH}.")
     embeddings = np.load(EMBEDDINGS_PATH)
 else:
-    print(f"Embedding {len(doc_texts)} docs (~$0.22 at {EMBEDDING_MODEL})")
+    print(f"Embedding {len(doc_texts)} docs.")
     embeddings = build_dense_index(doc_texts)
     np.save(EMBEDDINGS_PATH, embeddings)
-    (DENSE_DIR / "doc_ids.txt").write_text("\n".join(doc_ids))
+
+# doc_ids must stay aligned with the matrix rows, so always write it next to
+# the embeddings — including when the matrix was loaded from cache.
+(DENSE_DIR / "doc_ids.txt").write_text("\n".join(doc_ids))
